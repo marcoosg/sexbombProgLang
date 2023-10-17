@@ -101,48 +101,50 @@ class userInterface extends WindowAdapter {
                 e -> {
                     inputString = inputTA.getText();
 
-                    String[] tokensArray = checkTokens(inputString);
+                    String[] tokensArray = tokenChecker(inputString);
                     System.out.println(Arrays.toString(tokensArray));
 
-                    if (hasCorrectSeparators(tokensArray)) {
-                        if (isCorrectSequence(tokensArray)) {
+                    if (separatorChecker(tokensArray)) {
+                        if (sequenceChecker(tokensArray)) {
                             int startIndex = 0;
                             int endIndex = tokensArray.length - 1;
                             for (int i = 0; i < tokensArray.length; i++) {
-                                if (tokensArray[i].equals("openParen")) {
+                                if (tokensArray[i].equals("parenthesis1")) {
                                     startIndex = i;
-                                } else if (tokensArray[i].equals("closeParen")) {
+                                } else if (tokensArray[i].equals("parenthesis2")) {
                                     endIndex = i;
                                     break;
                                 }
                             }
 
                             flag = false;
-                            int initIndex = isCorrectInitialization(tokensArray, startIndex, endIndex);
-                            int conditionIndex = isCorrectCondition(tokensArray, startIndex, endIndex);
-                            int incDecIndex = isCorrectIncDec(tokensArray, startIndex, endIndex, flag);
+                            int initIndex = initializationChecker(tokensArray, startIndex, endIndex);
+                            int conditionIndex = conditionChecker(tokensArray, startIndex, endIndex);
+                            int incDecIndex = stepSizeChecker(tokensArray, startIndex, endIndex, flag);
 
                             if (initIndex > -1 && conditionIndex > -1 && incDecIndex > -1) {
                                 if (initIndex < conditionIndex && conditionIndex < incDecIndex) {
-                                    result += "Correct Order of Initialization, Condition, and Step Size\n\n";
-                                    result += "Checking Statements Inside the Body\n";
-                                    result += "______________________________________\n";
+                                    result += "✓ Initialization\n";
+                                    result += "✓ Condition \n";
+                                    result += "✓ Step Size \n\n";
+                                    result += "Checking Body...\n";
+                                    result += "▒▒▒▒▒▒▒▒▒▒ 100% ᴄᴏᴍᴘʟᴇᴛᴇ!\n";
                                     startIndex = 0;
                                     endIndex = tokensArray.length - 1;
                                     for (int i = 0; i < tokensArray.length; i++) {
-                                        if (tokensArray[i].equals("openCurly")) {
+                                        if (tokensArray[i].equals("curlyBracket1")) {
                                             startIndex = i;
-                                        } else if (tokensArray[i].equals("closeCurly")) {
+                                        } else if (tokensArray[i].equals("curlyBracket2")) {
                                             endIndex = i;
                                             break;
                                         }
                                     }
 
                                     if ((endIndex - startIndex) > 1) {
-                                        checkBody(tokensArray, startIndex, endIndex);
+                                        bodyChecker(tokensArray, startIndex, endIndex);
                                     }
                                 } else {
-                                    result += "Incorrect Order of Initialization, Condition, and Step Size\n";
+                                    result += "✖ Initialization, Condition, and Step Size are incorrect!\n";
                                 }
                             }
                         }
@@ -210,21 +212,21 @@ class userInterface extends WindowAdapter {
         );
     }
 
-    public String[] checkTokens(String input) {
+    public String[] tokenChecker(String input) {
         String[] inputArrayFirst = input.trim().split("\\s+");
         java.util.List<String> inputArraySecond = Arrays.asList(inputArrayFirst);
         java.util.List<String> inputArray = new ArrayList<>(inputArraySecond);
         
         Map<String, String> keywordMappings = new HashMap<>();
         keywordMappings.put("for", "for");
-        keywordMappings.put("(", "openParen");
-        keywordMappings.put(")", "closeParen");
-        keywordMappings.put("{", "openCurly");
-        keywordMappings.put("}", "closeCurly");
-        keywordMappings.put("[", "openBracket");
-        keywordMappings.put("]", "closeBracket");
+        keywordMappings.put("(", "parenthesis1");
+        keywordMappings.put(")", "parenthesis2");
+        keywordMappings.put("{", "curlyBracket1");
+        keywordMappings.put("}", "curlyBracket2");
+        keywordMappings.put("[", "squareBracket1");
+        keywordMappings.put("]", "squareBracket2");
         keywordMappings.put(";", "semiColon");
-        keywordMappings.put("int", "intType");
+        keywordMappings.put("int", "typeInt");
         keywordMappings.put("==", "equalEqual");
         keywordMappings.put("!=", "notEqual");
         keywordMappings.put("<", "lessThan");
@@ -232,8 +234,8 @@ class userInterface extends WindowAdapter {
         keywordMappings.put("<=", "lessOrEqual");
         keywordMappings.put(">=", "greaterOrEqual");
         keywordMappings.put("=", "assignmentEqual");
-        keywordMappings.put("System.out.println", "sysOutLn");
-        keywordMappings.put("System.out.print", "sysOut");
+        keywordMappings.put("System.out.println", "printNewLine");
+        keywordMappings.put("System.out.print", "printMethod");
         
         String part1 = "";
         int j = 0;
@@ -241,7 +243,7 @@ class userInterface extends WindowAdapter {
         {
             boolean retry = true;
             String token = inputArray.get(j);
-            if(token.equals("(") || token.equals(")") || token.equals(";") || token.equals("=") || token.equals("<=") || token.equals(">=") || token.equals("<") || token.equals(">"))
+            if(token.equals("(") || token.equals(")") || token.equals(";") || token.equals("=") || token.equals("<=") || token.equals(">=") || token.equals("<") || token.equals(">") || token.equals("{") || token.equals("}"))
             { 
                 retry = false;
             }
@@ -285,6 +287,16 @@ class userInterface extends WindowAdapter {
                 inputArray.set(j,part1);
                 inputArray.add(j+1, ">");
             }
+            else if (token.endsWith("{")) {
+                part1 = token.substring(0, token.length() - 1); // Remove the ";" from the end
+                inputArray.set(j,part1);
+                inputArray.add(j+1, "{");
+            }
+            else if (token.endsWith("}")) {
+                part1 = token.substring(0, token.length() - 1); // Remove the ";" from the end
+                inputArray.set(j,part1);
+                inputArray.add(j+1, "}");
+            }
             else
             {
                 String[] parts = token.split("\\(", 2);
@@ -295,6 +307,8 @@ class userInterface extends WindowAdapter {
                 String[] parts6 = token.split("\\>=", 2);
                 String[] parts7 = token.split("\\<", 2);
                 String[] parts8 = token.split("\\>", 2);
+                String[] parts9 = token.split("\\<", 2);
+                String[] parts10 = token.split("\\>", 2);
                 if(parts.length > 1){
                     inputArray.set(j,parts[0]);
                     inputArray.add(j+1,"(");
@@ -335,6 +349,16 @@ class userInterface extends WindowAdapter {
                     inputArray.add(j+1,">");
                     inputArray.add(j+2,parts8[1]);
                 }
+                else if(parts9.length > 1){
+                    inputArray.set(j,parts9[0]);
+                    inputArray.add(j+1,"{");
+                    inputArray.add(j+2,parts9[1]);
+                }
+                else if(parts10.length > 1){
+                    inputArray.set(j,parts10[0]);
+                    inputArray.add(j+1,"}");
+                    inputArray.add(j+2,parts10[1]);
+                }
                 else
                     retry = false;
             }
@@ -345,7 +369,8 @@ class userInterface extends WindowAdapter {
         
         for (int i = 0; i < inputArray.size(); i++) {
             String element = inputArray.get(i);
-            System.out.println(element);
+            if(element.isEmpty())
+                inputArray.remove(i);
         }
         String[] tokensArray = new String[inputArray.size()];
         for (int i = 0; i < inputArray.size(); i++) {
@@ -371,62 +396,62 @@ class userInterface extends WindowAdapter {
         return tokensArray;
     } // REMADE
 
-    public boolean hasCorrectSeparators(String[] tokensArray) {
-        int openParenCount = 0;
-        int openCurlyCount = 0;
-        int openBracketCount = 0;
+    public boolean separatorChecker(String[] tokensArray) {
+        int parenthesis1Count = 0;
+        int curlyBracket1Count = 0;
+        int squareBracket1Count = 0;
 
         for (String token : tokensArray) {
             switch (token) {
-                case "openParen":
-                    openParenCount++;
+                case "parenthesis1":
+                    parenthesis1Count++;
                     break;
-                case "closeParen":
-                    if (openParenCount == 0) {
+                case "parenthesis2":
+                    if (parenthesis1Count == 0) {
                         return handleError("parentheses");
                     }
-                    openParenCount--;
+                    parenthesis1Count--;
                     break;
-                case "openCurly":
-                    openCurlyCount++;
+                case "curlyBracket1":
+                    curlyBracket1Count++;
                     break;
-                case "closeCurly":
-                    if (openCurlyCount == 0) {
+                case "curlyBracket2":
+                    if (curlyBracket1Count == 0) {
                         return handleError("curly braces");
                     }
-                    openCurlyCount--;
+                    curlyBracket1Count--;
                     break;
-                case "openBracket":
-                    openBracketCount++;
+                case "squareBracket1":
+                    squareBracket1Count++;
                     break;
-                case "closeBracket":
-                    if (openBracketCount == 0) {
+                case "squareBracket2":
+                    if (squareBracket1Count == 0) {
                         return handleError("square brackets");
                     }
-                    openBracketCount--;
+                    squareBracket1Count--;
                     break;
             }
         }
 
-        return checkBalanced(openParenCount, openCurlyCount, openBracketCount);
+        return checkBalanced(parenthesis1Count, curlyBracket1Count, squareBracket1Count);
     }
 
     private boolean handleError(String separatorType) {
-        result += "Incorrect Sequence of Separators (for " + separatorType + ")\n";
+        result += "✖ Sequence of Separators is incorrect (for " + separatorType + ")\n";
         return false;
     }
 
-    private boolean checkBalanced(int openParenCount, int openCurlyCount, int openBracketCount) {
-        if (openParenCount == 0 && openCurlyCount == 0 && openBracketCount == 0) {
-            result += "Balanced and Correct Sequence of Separators\n";
+    private boolean checkBalanced(int parenthesis1Count, int curlyBracket1Count, int squareBracket1Count) {
+        if (parenthesis1Count == 0 && curlyBracket1Count == 0 && squareBracket1Count == 0) {
+            result += "✓ Balanced and Correct Sequence of Separators\n";
             return true;
         } else {
-            result += "Unbalanced Separators\n";
+            result += "✖ Separators are unbalanced!\n";
             return false;
         }
     }
 
-    public boolean isCorrectSequence(String[] tokensArray) {
+    public boolean sequenceChecker(String[] tokensArray) {
         boolean foundFor = false;
         boolean foundOpenParen = false;
         boolean foundCloseParen = false;
@@ -442,7 +467,7 @@ class userInterface extends WindowAdapter {
                 }
                 foundFor = true;
             } else if (i == 1 && foundFor) {
-                if (!token.equals("openParen")) {
+                if (!token.equals("parenthesis1")) {
                     break;
                 }
                 foundOpenParen = true;
@@ -450,18 +475,18 @@ class userInterface extends WindowAdapter {
                 foundOpenParen = true;
                 foundCloseParen = false;
                 closedParen = false;
-            } else if (token.equals("closeParen")) {
+            } else if (token.equals("parenthesis2")) {
                 if (foundOpenParen) {
                     foundCloseParen = true;
                     closedParen = true;
                 }
-            } else if (token.equals("openCurly")) {
+            } else if (token.equals("curlyBracket1")) {
                 if (foundOpenParen && foundCloseParen) {
                     foundOpenCurly = true;
                 } else {
                     break;
                 }
-            } else if (token.equals("closeCurly")) {
+            } else if (token.equals("curlyBracket2")) {
                 if (foundOpenCurly) {
                     foundCloseCurly = true;
                 }
@@ -469,55 +494,71 @@ class userInterface extends WindowAdapter {
         }
 
         boolean isCorrect = foundFor && foundOpenParen && closedParen && foundCloseParen && foundOpenCurly && foundCloseCurly;
-        result += isCorrect ? "Correct for, (), and {} sequence\n" : "Incorrect for, (), and {} sequence\n";
+        result += isCorrect ? "✓ Correct Sequence of: for, (), and {} \n" : "✖ Wrong Sequence of: for, (), and {} \n";
         return isCorrect;
     }
 
-    public int isCorrectIncDec(String[] tokensArray, int startIndex, int endIndex, boolean flag) {
-        if (flag) {
-            for (int i = startIndex; i <= endIndex - 1; i++) {
-                if (tokensArray[i].equals("incDec") && tokensArray[i + 1].equals("semiColon")) {
-                    result += "Found Step Size\n";
+    public int stepSizeChecker(String[] tokensArray, int startIndex, int endIndex, boolean flag) {
+        boolean stepSizeFound = false;
+
+        for (int i = startIndex; i <= endIndex; i++) {
+            if (tokensArray[i].equals("incDec")) {
+                if (flag && i < endIndex && tokensArray[i + 1].equals("semiColon")) {
+                    stepSizeFound = true;
+                    result += "✓ Step Size Found!\n";
+                    return i;
+                } else if (!flag) {
+                    stepSizeFound = true;
+                    result += "✓ Step Size Found\n";
                     return i;
                 }
             }
-            result += "Missing Step Size\n";
-            return -1;
-        } else {
-            for (int i = startIndex; i <= endIndex; i++) {
-                if (tokensArray[i].equals("incDec")) {
-                    result += "Found Step Size\n";
-                    return i;
-                }
-            }
-            result += "Missing Step Size\n";
-            return -1;
         }
-    }
 
-    public int isCorrectInitialization(String[] tokens, int startIndex, int endIndex) {
-        for (int i = startIndex; i <= endIndex - 4; i++) {
-            if ((tokens[i].equals("intType") && tokens[i + 1].equals("variableName") && tokens[i + 2].equals("assignmentEqual")
-                    && (tokens[i + 3].equals("integer") || tokens[i + 3].equals("variableName")) && tokens[i + 4].equals("semiColon"))) {
-                result += "Found Correct Initialization\n";
-                return i;
-            }
-
+        if (!stepSizeFound) {
+            result += "✖ Step Size Not Found\n";
         }
-        for (int i = startIndex; i <= endIndex - 3; i++) {
-            if ((tokens[i].equals("variableName") && tokens[i + 1].equals("assignmentEqual")
-                    && (tokens[i + 2].equals("integer") || tokens[i + 2].equals("variableName"))
-                    && tokens[i + 3].equals("semiColon"))) {
-                result += "Found Correct Initialization\n";
-                return i;
-            }
 
-        }
-        result += "Incorrect Initialization\n";
         return -1;
     }
 
-    public int isCorrectCondition(String[] tokensArray, int startIndex, int endIndex) {
+
+    public int initializationChecker(String[] tokens, int startIndex, int endIndex) {
+        boolean flag = true;
+        for (int i = startIndex; i <= endIndex - 4; i++) {
+            if ((tokens[i].equals("typeInt") && tokens[i + 1].equals("variableName") && !tokens[i - 1].equals("variableName") &&  tokens[i + 2].equals("assignmentEqual")
+                    && (tokens[i + 3].equals("integer") || tokens[i + 3].equals("variableName")) && tokens[i + 4].equals("semiColon"))) {
+                result += "✓ Correct Initialization\n";
+                return i;
+            }
+            if ((tokens[i].equals("typeInt") && tokens[i + 1].equals("variableName") && tokens[i - 1].equals("variableName")))
+            {
+                flag = false;
+                break;
+            }
+        }
+        
+        if(flag)
+        {
+            for (int i = startIndex; i <= endIndex - 3; i++) {
+                if ((tokens[i].equals("variableName") && !tokens[i - 1].equals("variableName") && tokens[i + 1].equals("assignmentEqual")
+                        && (tokens[i + 2].equals("integer") || tokens[i + 2].equals("variableName"))
+                        && tokens[i + 3].equals("semiColon"))) {
+                    result += "✓ Correct Initialization\n";
+                    return i;
+                }
+                if ((tokens[i].equals("variableName") && tokens[i + 1].equals("assignmentEqual")))
+                {
+                    flag = false;
+                    break;
+                }
+            }
+        }
+        result += "✖ Initialization is incorrect!\n";
+        return -1;
+    }
+
+    public int conditionChecker(String[] tokensArray, int startIndex, int endIndex) {
         for (int i = startIndex; i <= endIndex - 3; i++) {
             if ((tokensArray[i].equals("variableName")
                     && (tokensArray[i + 1].equals("lessThan") || tokensArray[i + 1].equals("greaterThan")
@@ -525,98 +566,79 @@ class userInterface extends WindowAdapter {
                     || tokensArray[i + 1].equals("equalEqual") || tokensArray[i + 1].equals("notEqual"))
                     && (tokensArray[i + 2].equals("integer") || tokensArray[i + 2].equals("variableName"))
                     && tokensArray[i + 3].equals("semiColon"))) {
-                result += "Found Correct Condition\n";
+                result += "✓ Correct Condition\n";
                 return i;
             }
         }
-        result += "Incorrect Condition\n";
+        result += "✖ Wrong Condition\n";
         return -1;
     }
 
-    public int isCorrectSysOut(String[] tokensArray, int startIndex, int endIndex) {
+    public int printChecker(String[] tokensArray, int startIndex, int endIndex) {
         for (int i = startIndex; i <= endIndex - 4; i++) {
-            if ((tokensArray[i].equals("sysOut") || tokensArray[i].equals("sysOutLn"))
-                    && tokensArray[i + 1].equals("openParen")
+            if ((tokensArray[i].equals("printMethod") || tokensArray[i].equals("printNewLine"))
+                    && tokensArray[i + 1].equals("parenthesis1")
                     && (tokensArray[i + 2].equals("stringValue") || tokensArray[i + 2].equals("variableName"))
-                    && tokensArray[i + 3].equals("closeParen")
+                    && tokensArray[i + 3].equals("parenthesis2")
                     && tokensArray[i + 4].equals("semiColon")) {
-                result += "Found Correct Sysout\n";
+                result += "✓ Correct Print Method\n";
                 return i;
             }
         }
-        result += "Incorrect Sysout\n";
+        result += "✖ Wrong Print Method\n";
         return -1;
     }
 
-    public boolean checkBody(String[] tokensArray, int startIndex, int endIndex) {
+    public boolean bodyChecker(String[] tokensArray, int startIndex, int endIndex) {
         boolean flag2 = true;
-        int initCounter = 0, incDecCounter = 0, sysOutCounter = 0, indexTracker = startIndex;
+        int initCounter = 0, incDecCounter = 0, printMethodCounter = 0, indexTracker = startIndex;
 
         for (int i = startIndex + 1; i < endIndex; i++) {
-            switch (tokensArray[i]) {
-                case "intType":
-                    initCounter++;
-                    break;
-                case "variableName":
-                    initCounter++;
-                    sysOutCounter++;
-                    break;
-                case "assignmentEqual":
-                    initCounter++;
-                    break;
-                case "integer":
-                    initCounter++;
-                    break;
-                case "incDec":
-                    incDecCounter += 10;
-                    break;
-                case "sysOut":
-                    sysOutCounter++;
-                    break;
-                case "sysOutLn":
-                    sysOutCounter++;
-                    break;
-                case "openParen":
-                    sysOutCounter++;
-                    break;
-                case "stringValue":
-                    sysOutCounter++;
-                    break;
-                case "closeParen":
-                    sysOutCounter++;
-                    break;
-                case "semiColon":
-                    if (initCounter > incDecCounter && initCounter > sysOutCounter) {
-                        isCorrectInitialization(tokensArray, indexTracker, i + 1);
-                        indexTracker = i + 1;
-                        initCounter = 0;
-                        incDecCounter = 0;
-                        sysOutCounter = 0;
-                        flag2 = false;
-                    } else if (incDecCounter > initCounter && incDecCounter > sysOutCounter) {
-                        isCorrectIncDec(tokensArray, indexTracker, i + 1, true);
-                        indexTracker = i + 1;
-                        initCounter = 0;
-                        incDecCounter = 0;
-                        sysOutCounter = 0;
-                        flag2 = false;
-                    } else if (sysOutCounter > initCounter && sysOutCounter > incDecCounter) {
-                        isCorrectSysOut(tokensArray, indexTracker, i + 1);
-                        indexTracker = i + 1;
-                        initCounter = 0;
-                        incDecCounter = 0;
-                        sysOutCounter = 0;
-                        flag2 = false;
-
-                    } else if (tokensArray[i + 1].equals("closeCurly")) {
-                        flag2 = false;
-                        return true;
-                    }
-                    break;
+            if (tokensArray[i].equals("typeInt")) {
+                initCounter++;
+            } else if (tokensArray[i].equals("variableName")) {
+                initCounter++;
+                printMethodCounter++;
+            } else if (tokensArray[i].equals("assignmentEqual")) {
+                initCounter++;
+            } else if (tokensArray[i].equals("integer")) {
+                initCounter++;
+                printMethodCounter++;
+            } else if (tokensArray[i].equals("incDec")) {
+                incDecCounter += 10;
+            } else if (tokensArray[i].equals("printMethod") || tokensArray[i].equals("printNewLine") || tokensArray[i].equals("parenthesis1") || tokensArray[i].equals("stringValue") || tokensArray[i].equals("parenthesis2")) {
+                printMethodCounter++;
+            } else if (tokensArray[i].equals("semiColon")) {
+                if (initCounter > incDecCounter && initCounter > printMethodCounter) {
+                    initializationChecker(tokensArray, indexTracker, i + 1);
+                    indexTracker = i + 1;
+                    initCounter = 0;
+                    incDecCounter = 0;
+                    printMethodCounter = 0;
+                    flag2 = false;
+                } else if (incDecCounter > initCounter && incDecCounter > printMethodCounter) {
+                    stepSizeChecker(tokensArray, indexTracker, i + 1, true);
+                    indexTracker = i + 1;
+                    initCounter = 0;
+                    incDecCounter = 0;
+                    printMethodCounter = 0;
+                    flag2 = false;
+                } else if (printMethodCounter > initCounter && printMethodCounter > incDecCounter) {
+                    printChecker(tokensArray, indexTracker, i + 1);
+                    indexTracker = i + 1;
+                    initCounter = 0;
+                    incDecCounter = 0;
+                    printMethodCounter = 0;
+                    flag2 = false;
+                } else if (tokensArray[i + 1].equals("curlyBracket2")) {
+                    flag2 = false;
+                    return true;
+                }
             }
         }
-        if (flag2 == true) {
-            result += "Error\n";
+
+        if (flag2) {
+            result += "✖ Error\n";
         }
         return false;
     }
